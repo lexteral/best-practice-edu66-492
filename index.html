@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Best Practice EDU66-492</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky top bar + tabs; evaluate view = student rail (left) + scoring sheet (right), stacks on phones */
+:root{
+  --bg:#f6f5f8; --surface:#ffffff; --sunken:#efedf3; --line:#dedae6;
+  --fg:#1f1b2a; --muted:#6b6579; --accent:#5b2a86; --accent-soft:#ece3f5; --on-accent:#ffffff;
+  --gold:#b7791f; --gold-soft:#fbf1dc;
+  --ok:#2f7d4f; --ok-soft:#e1f2e7; --warn:#a15c07; --warn-soft:#fcefd9; --bad:#b4363b; --bad-soft:#f9e1e2;
+  --display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16131c; --surface:#1f1b27; --sunken:#272231; --line:#363042;
+  --fg:#ece8f3; --muted:#a59fb3; --accent:#c49be8; --accent-soft:#33264a; --on-accent:#1a1324;
+  --gold:#e3b25e; --gold-soft:#3a2e18;
+  --ok:#7bcf9a; --ok-soft:#1d3426; --warn:#e8b05a; --warn-soft:#3a2b14; --bad:#ee8a8e; --bad-soft:#3d1f22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16131c; --surface:#1f1b27; --sunken:#272231; --line:#363042;
+  --fg:#ece8f3; --muted:#a59fb3; --accent:#c49be8; --accent-soft:#33264a; --on-accent:#1a1324;
+  --gold:#e3b25e; --gold-soft:#3a2e18;
+  --ok:#7bcf9a; --ok-soft:#1d3426; --warn:#e8b05a; --warn-soft:#3a2b14; --bad:#ee8a8e; --bad-soft:#3d1f22; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.25}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px}
+.top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;min-width:0;flex:1}
+.brand h1{font-size:19px;color:var(--accent)}
+.brand small{color:var(--muted);font-size:12.5px}
+.who{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border:1px solid var(--line);border-radius:999px;max-width:100%;min-width:0}
+.who img{width:28px;height:28px;border-radius:50%}
+.who .wn{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.who .wn b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .wn span{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.role{font-size:11px;letter-spacing:.04em;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600;white-space:nowrap}
+nav.tabs{display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{border:0;background:none;padding:8px 14px 10px;border-bottom:2px solid transparent;color:var(--muted);font-weight:500;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+
+main{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:18px 48px}
+.notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;max-width:640px;margin:24px auto;display:flex;flex-direction:column;gap:10px}
+.notice h2{font-size:19px}
+.notice p{margin:0;color:var(--muted)}
+.notice code{background:var(--sunken);padding:1px 6px;border-radius:5px;font-size:13px}
+
+/* evaluate */
+.eval{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+.rail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;position:sticky;top:120px;max-height:calc(100vh - 140px);display:flex;flex-direction:column}
+.rail-h{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.rail-h input{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.rail-h .prog{font-size:12.5px;color:var(--muted)}
+.rail ul{list-style:none;margin:0;padding:4px;overflow:auto}
+.rail li button{width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center}
+.rail li button:hover{background:var(--sunken)}
+.rail li button[aria-current="true"]{background:var(--accent-soft)}
+.rail .nm{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail .sid{font-size:12px;color:var(--muted)}
+.dots{display:flex;gap:4px;grid-row:span 2}
+.dot{width:20px;height:20px;border-radius:5px;font-size:11px;font-weight:600;display:grid;place-items:center;background:var(--sunken);color:var(--muted)}
+.dot.done{background:var(--ok-soft);color:var(--ok)}
+.dot.part{background:var(--warn-soft);color:var(--warn)}
+.dot.na{opacity:.35}
+
+.sheet{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sheet-h{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.sheet-h h2{font-size:22px}
+.sheet-h .meta{color:var(--muted);font-size:13px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 12px;font-size:14px;display:flex;align-items:center;gap:8px}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.seg .n{font-family:var(--display);font-weight:700}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.scale-note{font-size:12.5px;color:var(--muted);padding:12px 18px;border-bottom:1px solid var(--line)}
+.sec-title{font-family:var(--display);font-weight:600;font-size:15px;padding:12px 18px;background:var(--sunken);border-bottom:1px solid var(--line)}
+.item{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px 12px;padding:12px 18px;border-bottom:1px solid var(--line);align-items:center}
+.item:last-child{border-bottom:0}
+.item .no{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.item .tx{font-size:14.5px}
+.item .desc{grid-column:2/4;font-size:13px;color:var(--muted);background:var(--sunken);border-radius:7px;padding:6px 10px}
+.pick{display:flex;gap:4px}
+.pick button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-weight:600;font-variant-numeric:tabular-nums}
+.pick button:hover{border-color:var(--accent)}
+.pick button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pick button[aria-pressed="true"].lo{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+.field{display:flex;flex-direction:column;gap:6px;padding:14px 18px}
+.field label{font-size:13px;font-weight:600}
+.field input,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.field textarea{min-height:84px;resize:vertical}
+.field .hint{font-size:12.5px;color:var(--bad)}
+
+.totalbar{position:sticky;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 -6px 18px rgba(20,10,40,.06)}
+.big{font-family:var(--display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.big small{font-size:14px;color:var(--muted);font-weight:500}
+.lvl{padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;background:var(--sunken);color:var(--muted)}
+.lvl.l5{background:var(--ok-soft);color:var(--ok)} .lvl.l4{background:var(--accent-soft);color:var(--accent)}
+.lvl.l3{background:var(--gold-soft);color:var(--gold)} .lvl.l2,.lvl.l1{background:var(--bad-soft);color:var(--bad)}
+.save-state{margin-left:auto;font-size:13px;color:var(--muted)}
+.save-state.err{color:var(--bad)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);padding:8px 16px;border-radius:8px;font-weight:600}
+.btn.ghost{background:none;color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+
+/* summary */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.stat .k{font-size:13px;color:var(--muted)}
+.stat .v{font-family:var(--display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--sunken);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.toolbar h2{font-size:18px;margin-right:auto}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+thead th{font-size:12.5px;color:var(--muted);font-weight:600;background:var(--sunken);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.c,th.c{text-align:center}
+.cell{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;padding:4px 6px;border-radius:7px;min-width:96px}
+button.cell:hover{background:var(--sunken)}
+.cell .s{font-variant-numeric:tabular-nums;font-weight:600}
+.cell .n{font-size:11.5px;color:var(--muted)}
+.muted{color:var(--muted)}
+.chk{width:20px;height:20px;accent-color:var(--accent)}
+
+.detail{margin-top:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.detail h3{font-size:16px}
+.detail .row{display:grid;grid-template-columns:minmax(140px,220px) 90px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+@media (max-width:640px){.detail .row{grid-template-columns:1fr auto}.detail .row .cm{grid-column:1/-1}}
+
+/* settings */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px;align-items:start}
+.panel{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.panel h2{font-size:17px}
+.panel p{margin:0;font-size:13.5px;color:var(--muted)}
+.lect{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center}
+.lect input{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);width:100%;min-width:0}
+.lect .ix{font-family:var(--display);font-weight:700;color:var(--muted)}
+.linkst{grid-column:2/4;font-size:12.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.finder{padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);width:200px;max-width:100%}
+.linkst select{padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);max-width:100%}
+.tag{font-size:12px;padding:1px 8px;border-radius:999px}
+.tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.wait{background:var(--sunken);color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;z-index:20}
+
+@media (max-width:900px){
+  .eval,.grid2{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;max-height:300px}
+}
+@media (max-width:560px){
+  .item{grid-template-columns:24px minmax(0,1fr)}
+  .pick{grid-column:2/3}
+  .item .desc{grid-column:1/-1}
+  .pick button{width:40px;height:40px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+html{color-scheme:light} body{margin:0} [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="top-row">
+      <div class="brand">
+        <h1>ประเมิน Best Practice นักศึกษาฝึกประสบการณ์วิชาชีพครู</h1>
+        <small>มหาวิทยาลัยวลัยลักษณ์ · รายวิชา EDU66-492 กลุ่มที่ 2 · ภาคการศึกษาที่ 1/2569</small>
+      </div>
+      <div class="who" id="who" hidden>
+        <img id="whoImg" alt="" referrerpolicy="no-referrer">
+        <div class="wn"><b id="whoName"></b><span id="whoMail"></span></div>
+        <span class="role" id="whoRole"></span>
+        <button class="btn ghost sm" id="signout">ออกจากระบบ</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+<main id="app">
+  <div class="notice"><h2>กำลังเชื่อมต่อระบบ…</h2><p>กำลังตรวจสอบการเข้าสู่ระบบ</p></div>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = "https://vfgvjnuznloiuvuzimum.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Amm3b_RFBF0pwJrxUHR5Wg_zbfeW9dr";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{flowType:"pkce",detectSessionInUrl:true,persistSession:true}});
+
+const CRIT = {"media": [{"t": "สอดคล้องกับเนื้อหาวิชา และหัวข้อที่สอน", "d": ["สอดคล้องกับเนื้อหาและหัวข้อครบถ้วน ถูกต้อง ครอบคลุมสาระสำคัญทั้งหมด", "สอดคล้องกับเนื้อหาและหัวข้อเป็นส่วนใหญ่ มีความถูกต้อง", "สอดคล้องกับเนื้อหาหลัก แต่ยังขาดรายละเอียดบางส่วน", "สอดคล้องกับเนื้อหาเพียงบางส่วน มีข้อคลาดเคลื่อนบางประเด็น", "ไม่สอดคล้องกับเนื้อหา หรือไม่ตรงกับหัวข้อที่สอน"]}, {"t": "สอดคล้องกับจุดประสงค์ มาตรฐานการเรียนรู้ และตัวชี้วัด", "d": ["เชื่อมโยงจุดประสงค์ มาตรฐาน และตัวชี้วัดได้ครบถ้วน ชัดเจน", "เชื่อมโยงได้เกือบครบถ้วน เหมาะสมกับเป้าหมายการเรียนรู้", "สอดคล้องกับจุดประสงค์หลัก แต่ยังไม่ครอบคลุมทั้งหมด", "สอดคล้องเพียงบางจุด และยังไม่ชัดเจน", "ไม่สัมพันธ์กับจุดประสงค์ มาตรฐาน หรือตัวชี้วัด"]}, {"t": "เหมาะสมกับวัยหรือระดับชั้นของผู้เรียน", "d": ["เหมาะสมอย่างยิ่งกับวัย ความสามารถ และพัฒนาการของผู้เรียน", "เหมาะสมกับวัยและระดับชั้น มีจุดที่ควรปรับเล็กน้อย", "เหมาะสมในภาพรวม แต่บางส่วนยังไม่ตรงกับระดับผู้เรียน", "เหมาะสมน้อย เนื้อหาหรือรูปแบบยาก/ง่ายเกินไปบางส่วน", "ไม่เหมาะสมกับวัยหรือระดับความสามารถของผู้เรียน"]}, {"t": "ทำให้เกิดความคิดรวบยอดต่อเรื่องที่เรียน", "d": ["ช่วยให้ผู้เรียนเข้าใจแนวคิดหลัก สรุปองค์ความรู้ได้ชัดเจน", "ช่วยสร้างความเข้าใจแนวคิดสำคัญได้ดี", "ช่วยให้เข้าใจเนื้อหาได้ระดับหนึ่ง", "ส่งเสริมความเข้าใจได้บางส่วน แต่ยังขาดความชัดเจน", "ไม่ช่วยให้เกิดความเข้าใจหรือความคิดรวบยอด"]}, {"t": "มีความคิดสร้างสรรค์ น่าสนใจ และดึงดูดความสนใจ", "d": ["มีความแปลกใหม่ สวยงาม สร้างสรรค์ และกระตุ้นความสนใจสูง", "มีความน่าสนใจและสร้างแรงจูงใจได้ดี", "มีรูปแบบเหมาะสม แต่น่าสนใจระดับปานกลาง", "มีความน่าสนใจน้อย รูปแบบยังไม่โดดเด่น", "ขาดความคิดสร้างสรรค์ ไม่ดึงดูดความสนใจ"]}, {"t": "ประยุกต์ใช้ได้หลากหลาย", "d": ["สามารถนำไปใช้ได้หลายกิจกรรม หลายสถานการณ์ และปรับใช้ได้ดี", "นำไปประยุกต์ใช้ได้หลายรูปแบบ", "สามารถใช้ได้ตามวัตถุประสงค์ที่กำหนด", "ประยุกต์ใช้ได้จำกัด ต้องปรับปรุงเพิ่มเติม", "ใช้งานได้เฉพาะด้าน ไม่สามารถปรับใช้ได้"]}, {"t": "กระตุ้นให้เกิดกระบวนการคิด", "d": ["ส่งเสริมการคิดวิเคราะห์ คิดสร้างสรรค์ และแก้ปัญหาได้อย่างชัดเจน", "กระตุ้นให้ผู้เรียนคิดและแสดงความคิดเห็นได้ดี", "ส่งเสริมกระบวนการคิดในระดับพื้นฐาน", "กระตุ้นการคิดได้น้อย ผู้เรียนมีส่วนร่วมน้อย", "ไม่ส่งเสริมกระบวนการคิดของผู้เรียน"]}, {"t": "ผู้เรียนมีส่วนร่วมในการใช้", "d": ["เปิดโอกาสให้ผู้เรียนมีส่วนร่วม ลงมือปฏิบัติ และมีปฏิสัมพันธ์สูง", "ผู้เรียนมีส่วนร่วมในการใช้สื่อเป็นส่วนใหญ่", "ผู้เรียนมีส่วนร่วมในบางกิจกรรม", "ผู้เรียนมีโอกาสใช้สื่อน้อย ส่วนใหญ่เป็นผู้รับข้อมูล", "ผู้เรียนไม่มีส่วนร่วมในการใช้สื่อ"]}, {"t": "คงทนถาวร", "d": ["วัสดุแข็งแรง มีคุณภาพ ใช้งานซ้ำได้หลายครั้ง และเก็บรักษาง่าย", "มีความแข็งแรง ใช้งานซ้ำได้ดี", "มีความคงทนระดับปานกลาง ใช้งานได้ตามปกติ", "ชำรุดง่าย ต้องดูแลหรือซ่อมแซมบ่อย", "ไม่คงทน เสียหายง่าย ไม่เหมาะต่อการใช้งานต่อเนื่อง"]}, {"t": "สะดวก ง่ายต่อการใช้งาน", "d": ["ใช้งานง่าย ขั้นตอนไม่ซับซ้อน เหมาะสำหรับครูและผู้เรียน", "ใช้งานสะดวก มีคำแนะนำหรือวิธีใช้ชัดเจน", "ใช้งานได้ แต่ต้องมีคำอธิบายเพิ่มเติมบางส่วน", "ใช้งานค่อนข้างยาก ต้องได้รับคำแนะนำตลอด", "ใช้งานยุ่งยาก ไม่สะดวกต่อการจัดการเรียนรู้"]}], "teaching": ["นักศึกษามีบุคลิกภาพที่เหมาะสมต่อการเป็นครู ใช้ระดับเสียงและน้ำเสียงได้เหมาะสมชัดเจน", "นักศึกษาสามารถจัดการเรียนรู้ให้เป็นไปตามแผนการจัดการเรียนรู้", "นักศึกษามีความแม่นยำในเนื้อหาสาระที่สอน", "นักศึกษาสามารถจัดกิจกรรมการเรียนรู้ให้ผู้เรียนโดยตระหนักถึงสุขภาวะทางร่างกายและจิตใจของผู้เรียน", "นักศึกษาใช้วิธีการที่เหมาะสมในการกระตุ้นและเสริมสร้างแรงจูงใจในการเรียนรู้แก่ผู้เรียน", "นักศึกษาสามารถดูแลช่วยเหลือและพัฒนาผู้เรียนเป็นรายบุคคลตามศักยภาพ", "นักศึกษาเปิดโอกาสให้ผู้เรียนได้แสดงความคิดเห็นหรือมีส่วนร่วมในการทำกิจกรรมในชั้นเรียน", "นักศึกษาส่งเสริมให้ผู้เรียนแสดงสมรรถนะและทักษะต่างๆ อย่างเต็มศักยภาพ", "นักศึกษาเชื่อมโยงเนื้อหาสาระสู่การนำไปใช้ในชีวิตประจำวันได้อย่างเหมาะสม", "นักศึกษาสามารถสร้างบรรยากาศการเรียนรู้ให้ผู้เรียนมีความสุขในการเรียน", "นักศึกษาสอดแทรกคุณลักษณะที่ดีงามแก่ผู้เรียนตามโอกาสที่เหมาะสม", "นักศึกษาแก้ปัญหาเฉพาะหน้าและควบคุมอารมณ์ได้อย่างเหมาะสม", "นักศึกษามีความเชี่ยวชาญในการใช้สื่อเทคโนโลยีดิจิทัลในการจัดการเรียนรู้", "นักศึกษาใช้คำถามที่เข้าใจง่ายและตรงประเด็นกับเนื้อหา", "นักศึกษาใช้วิธีการวัดและประเมินผลสอดคล้องกับจุดประสงค์การเรียนรู้", "นักศึกษาเข้าสอนและเลิกสอนตรงตามเวลา"], "research1": ["นักศึกษาพบกับอาจารย์นิเทศก์หรือครูพี่เลี้ยงเพื่อรายงานความก้าวหน้างานวิจัยอย่างสม่ำเสมอ", "นักศึกษาสามารถวิเคราะห์ อธิบายประเด็นปัญหา และทำวิจัยที่สอดคล้องกับปัญหาของผู้เรียนได้", "นักศึกษามีการวางแผนการดำเนินงานวิจัยและเก็บข้อมูลอย่างเป็นระบบและถูกต้อง", "นักศึกษาสามารถสร้างนวัตกรรม/เครื่องมือในการทำวิจัยโดยใช้เทคโนโลยีดิจิทัลได้อย่างเหมาะสมและถูกต้องตามหลักการวิจัย", "นักศึกษานำข้อเสนอแนะของอาจารย์นิเทศก์หรือครูพี่เลี้ยงไปปรับปรุงการดำเนินงานวิจัย", "นักศึกษาเลือก/จัดทำเครื่องมือในการเก็บรวบรวมและวิเคราะห์ข้อมูลได้ถูกต้อง", "นักศึกษาได้หาคุณภาพของเครื่องมือด้วยวิธีการที่เหมาะสมก่อนนำไปทดลองใช้จริง", "นักศึกษาดำเนินการเก็บข้อมูลอย่างเป็นระบบ และดำเนินการตามแผนที่วางไว้โดยคำนึงถึงจริยธรรมการวิจัย"], "research2": ["นักศึกษานำเสนอผลการวิเคราะห์ข้อมูลครอบคลุมวัตถุประสงค์ของปัญหาวิจัยทุกข้อ", "นักศึกษาเลือกวิธีแสดงผลการวิเคราะห์ข้อมูลในรูปแบบที่เข้าใจง่าย ชัดเจน", "นักศึกษาอภิปรายผลการวิเคราะห์ข้อมูลสอดคล้องกับวัตถุประสงค์ของปัญหาวิจัย", "มีการอ้างอิงงานวิจัยที่เกี่ยวข้องประกอบการอภิปรายผล", "นักศึกษาสามารถวิเคราะห์ผลที่เกิดขึ้นกับผู้เรียนได้ชัดเจน สะท้อนจุดเด่นและจุดที่ต้องปรับปรุง", "มีการนำเสนอข้อเสนอแนะในการแก้ปัญหาที่สามารถเป็นไปได้ในทางปฏิบัติ", "โครงสร้างรายงานถูกต้องตามหลักวิชาการ ใช้ภาษาเหมาะสมและชัดเจน", "มีการอ้างอิงถูกต้องทั้งในส่วนเนื้อหา และในบรรณานุกรม"]};
+const LEVELS = ["ดีมาก","ดี","ปานกลาง","น้อย","น้อยที่สุด"];
+const DIMS = [
+  {key:"teaching", no:1, short:"การจัดการเรียนรู้", title:"ด้านการจัดการเรียนรู้",
+   scale:"5 = ดีมาก, 4 = ดี, 3 = ปานกลาง, 2 = พอใช้, 1 = ควรปรับปรุง",
+   sections:[{items:CRIT.teaching.map(t=>({t}))}], cut:[65,49,33,17,0]},
+  {key:"media", no:2, short:"สื่อการเรียนรู้", title:"ด้านการพัฒนาและการใช้สื่อการเรียนรู้",
+   scale:"5 = ดีเยี่ยม, 4 = ดีมาก, 3 = ดี, 2 = พอใช้, 1 = ควรปรับปรุง (เลือกคะแนนเพื่อดูคำอธิบายระดับคุณภาพ)",
+   sections:[{items:CRIT.media}], cut:[41,31,21,11,0], hasTitle:true},
+  {key:"research", no:3, short:"วิจัยในชั้นเรียน", title:"ด้านการทำวิจัยในชั้นเรียน",
+   scale:"5 = ดีมาก, 4 = ดี, 3 = ปานกลาง, 2 = พอใช้, 1 = ควรปรับปรุง",
+   sections:[{name:"ด้านที่ 1 กระบวนการดำเนินการวิจัยในชั้นเรียน",items:CRIT.research1.map(t=>({t}))},
+             {name:"ด้านที่ 2 การวิเคราะห์ข้อมูลและการเขียนรายงานการวิจัย",items:CRIT.research2.map(t=>({t}))}],
+   cut:[65,49,33,17,0]},
+];
+DIMS.forEach(d=>{d.count=d.sections.reduce((a,s)=>a+s.items.length,0); d.max=d.count*5;});
+const DIM = Object.fromEntries(DIMS.map(d=>[d.key,d]));
+
+const S = {
+  user:null, isAdmin:false, me:null /* committee row */, students:[], submitted:{}, committee:[],
+  scores:{} /* evaluator -> sid -> key -> row */, tab:null, tabs:[], sel:null, dim:"teaching",
+  search:"", detail:null, saveState:"", dirty:{},
+};
+const $ = s=>document.querySelector(s);
+const el=(tag,attrs={},...kids)=>{const e=document.createElement(tag);
+  for(const[k,v]of Object.entries(attrs)){ if(v==null||v===false) continue;
+    if(k==="class") e.className=v; else if(k.startsWith("on")) e.addEventListener(k.slice(2),v);
+    else if(k==="text") e.textContent=v; else e.setAttribute(k,v===true?"":v);}
+  for(const k of kids.flat()){ if(k==null||k===false) continue; e.append(k instanceof Node?k:document.createTextNode(String(k))); }
+  return e;};
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600);}
+function errMsg(e){const m=(e&&(e.message||e.code))||"";
+  const map={committee_full:"ที่นั่งผู้ประเมินครบ 5 ท่านแล้ว",not_admin:"เฉพาะผู้ดูแลระบบ",user_not_found:"ยังไม่พบบัญชีนี้ ผู้ใช้ต้องเข้าสู่ระบบด้วย Google อย่างน้อยหนึ่งครั้งก่อน",google_required:"ต้องเข้าสู่ระบบด้วยบัญชี Google",name_required:"กรุณากรอกชื่อ"};
+  for(const k in map) if(m.includes(k)) return map[k]; return m||"เกิดข้อผิดพลาด";}
+
+/* ---------- scoring ---------- */
+function getRow(uid,sid,key){return ((S.scores[uid]||{})[sid]||{})[key]||null;}
+function dimResult(row,key){
+  const d=DIM[key]; const s=(row&&row.s)||[];
+  let filled=0,total=0; for(let i=0;i<d.count;i++){const v=s[i]; if(typeof v==="number"){filled++;total+=v;}}
+  const complete=filled===d.count; const needsComment=s.some(v=>v===1)&&!(row&&row.note&&row.note.trim());
+  return {filled,total,complete,needsComment,done:complete&&!needsComment};
+}
+function levelOf(key,total){const c=DIM[key].cut;for(let i=0;i<c.length;i++) if(total>=c[i]) return {name:LEVELS[i],cls:"l"+(5-i)};return {name:LEVELS[4],cls:"l1"};}
+function isSubmitted(sid,key){return !!(S.submitted[sid]&&S.submitted[sid][key]);}
+function fmt(n){return Number.isInteger(n)?String(n):n.toFixed(2);}
+
+/* ---------- auth & loading ---------- */
+async function start(){
+  $("#signout").onclick=async()=>{await sb.auth.signOut(); location.reload();};
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) return renderLogin();
+  S.user=session.user;
+  if((S.user.app_metadata||{}).provider!=="google"){ await sb.auth.signOut(); return renderLogin("กรุณาเข้าสู่ระบบด้วยบัญชี Google"); }
+  renderWho();
+  const {data:isAdmin}=await sb.rpc("claim_admin"); S.isAdmin=!!isAdmin;
+  await loadAll();
+}
+function renderLogin(msg){
+  $("#who").hidden=true; $("#tabs").replaceChildren();
+  $("#app").replaceChildren(el("div",{class:"notice"},
+    el("h2",{text:"เข้าสู่ระบบ"}),
+    el("p",{text:"สำหรับอาจารย์ผู้ประเมินและผู้ดูแลระบบ กรุณาเข้าสู่ระบบด้วยบัญชี Google ของท่าน"}),
+    msg?el("p",{class:"hint",style:"color:var(--bad)",text:msg}):null,
+    el("div",{},el("button",{class:"btn",id:"glogin",onclick:async()=>{
+      const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:"select_account"}}});
+      if(error) toast(errMsg(error));}},"เข้าสู่ระบบด้วย Google"))));
+}
+function renderWho(){
+  const m=S.user.user_metadata||{};
+  $("#who").hidden=false; $("#whoImg").src=m.avatar_url||m.picture||""; $("#whoImg").hidden=!(m.avatar_url||m.picture);
+  $("#whoName").textContent=m.full_name||m.name||S.user.email; $("#whoMail").textContent=S.user.email||"";
+}
+async function loadAll(){
+  const uid=S.user.id;
+  const mine=await sb.from("committee").select("*").eq("user_id",uid).maybeSingle();
+  S.me=mine.data||null;
+  const approved=S.me&&S.me.status==="approved";
+  if(S.isAdmin||approved){
+    const [st,sub,sc,cm]=await Promise.all([
+      sb.from("students").select("id,no,name").order("no"),
+      sb.from("submissions").select("student_id,domain,submitted"),
+      S.isAdmin?sb.from("scores").select("*"):sb.from("scores").select("*").eq("evaluator",uid),
+      sb.from("committee").select("*").order("seat",{nullsFirst:false}),
+    ]);
+    const bad=[st,sub,sc,cm].find(r=>r.error); if(bad){toast(errMsg(bad.error));}
+    S.students=st.data||[];
+    S.submitted={}; (sub.data||[]).forEach(r=>{(S.submitted[r.student_id]??={})[r.domain]=r.submitted;});
+    S.scores={}; (sc.data||[]).forEach(r=>{((S.scores[r.evaluator]??={})[r.student_id]??={})[r.domain]=r;});
+    S.committee=cm.data||[];
+  }
+  const tabs=[];
+  if(approved) tabs.push(["evaluate","ประเมินนักศึกษา"]);
+  if(S.isAdmin) tabs.push(["summary","สรุปผลการประเมิน"],["settings","ผู้ประเมินและการส่งผลงาน"]);
+  S.tabs=tabs; if(!tabs.find(t=>t[0]===S.tab)) S.tab=tabs[0]?tabs[0][0]:null;
+  const seat=approved?S.me.seat:null;
+  $("#whoRole").textContent=[S.isAdmin?"ผู้ดูแลระบบ":null,approved?"ผู้ประเมินที่ "+seat:null].filter(Boolean).join(" · ")||"รอการอนุมัติ";
+  render();
+}
+
+/* ---------- render ---------- */
+let raf=0; function render(){ if(raf) return; raf=requestAnimationFrame(()=>{raf=0;doRender();}); }
+function doRender(){
+  const ae=document.activeElement, fid=ae&&ae.id, sel=ae&&ae.id&&(ae.tagName==="INPUT"||ae.tagName==="TEXTAREA")?[ae.selectionStart,ae.selectionEnd]:null;
+  $("#tabs").replaceChildren(...S.tabs.map(([k,label])=>el("button",{role:"tab","aria-selected":String(S.tab===k),onclick:()=>{S.tab=k;S.detail=null;render();}},label)));
+  if(!S.tab) renderRegister();
+  else if(S.tab==="evaluate") renderEvaluate();
+  else if(S.tab==="summary") renderSummary();
+  else renderSettings();
+  if(fid){const n=document.getElementById(fid); if(n&&n!==document.activeElement){n.focus({preventScroll:true}); if(sel&&n.setSelectionRange) try{n.setSelectionRange(sel[0],sel[1]);}catch(e){}}}
+}
+function renderRegister(){
+  const st=S.me&&S.me.status;
+  const nm=(S.me&&S.me.name)||(S.user.user_metadata||{}).full_name||"";
+  const msg=st==="pending"?"ส่งคำขอแล้ว กรุณารอผู้ดูแลระบบอนุมัติ จากนั้นกด \"ตรวจสอบอีกครั้ง\""
+    :st==="rejected"?"คำขอของท่านไม่ได้รับการอนุมัติ หากเป็นความผิดพลาดกรุณาติดต่อผู้ดูแลระบบ แล้วส่งคำขอใหม่"
+    :"บัญชีนี้ยังไม่ได้เป็นผู้ประเมิน กรอกชื่อ-สกุลที่จะแสดงในระบบ แล้วส่งคำขอเพื่อให้ผู้ดูแลระบบอนุมัติ (รับได้ 5 ท่าน)";
+  $("#app").replaceChildren(el("div",{class:"notice"},
+    el("h2",{text:st==="pending"?"รอการอนุมัติ":"ลงทะเบียนเป็นอาจารย์ผู้ประเมิน"}),
+    el("p",{text:msg}),
+    el("div",{class:"field",style:"padding:0"},el("label",{for:"regname",text:"ชื่อ-สกุล (เช่น ผศ.ดร. ...)"}),el("input",{id:"regname",value:nm})),
+    el("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},
+      el("button",{class:"btn",onclick:async()=>{const {error}=await sb.rpc("register_committee",{p_name:$("#regname").value}); if(error) return toast(errMsg(error)); toast("ส่งคำขอแล้ว"); loadAll();}},st==="pending"?"แก้ไขชื่อ":"ส่งคำขอ"),
+      st?el("button",{class:"btn ghost",onclick:loadAll},"ตรวจสอบอีกครั้ง"):null)));
+}
+
+/* ---------- evaluate ---------- */
+function myStudents(){return S.students.filter(s=>DIMS.some(d=>isSubmitted(s.id,d.key)));}
+function renderEvaluate(){
+  const uid=S.user.id, list=myStudents();
+  if(!list.length) return $("#app").replaceChildren(el("div",{class:"notice"},el("h2",{text:"ยังไม่มีผลงานที่รอการประเมิน"}),el("p",{text:"เมื่อผู้ดูแลระบบทำเครื่องหมายว่านักศึกษาส่งผลงานแล้ว รายชื่อจะปรากฏที่นี่"})));
+  if(!S.sel||!list.find(s=>s.id===S.sel)) S.sel=list[0].id;
+  const avail=DIMS.filter(d=>isSubmitted(S.sel,d.key)); if(!avail.find(d=>d.key===S.dim)) S.dim=avail[0].key;
+  let tasks=0,done=0; list.forEach(s=>DIMS.forEach(d=>{if(isSubmitted(s.id,d.key)){tasks++; if(dimResult(getRow(uid,s.id,d.key),d.key).done) done++;}}));
+  const q=S.search.trim();
+  const rail=el("aside",{class:"rail"},
+    el("div",{class:"rail-h"},
+      el("input",{id:"q",type:"search",placeholder:"ค้นหาชื่อหรือรหัสนักศึกษา",value:S.search,"aria-label":"ค้นหานักศึกษา",oninput:e=>{S.search=e.target.value;render();}}),
+      el("div",{class:"prog num",text:`ประเมินแล้ว ${done} จาก ${tasks} รายการ`}),
+      el("div",{class:"bar"},el("i",{style:`width:${tasks?done/tasks*100:0}%`}))),
+    el("ul",{},list.filter(s=>!q||s.name.includes(q)||s.id.includes(q)).map(s=>{
+      const dots=DIMS.map(d=>{ if(!isSubmitted(s.id,d.key)) return el("span",{class:"dot na",title:d.title+" (ยังไม่ส่ง)",text:d.no});
+        const r=dimResult(getRow(uid,s.id,d.key),d.key); return el("span",{class:"dot "+(r.done?"done":r.filled?"part":""),title:d.title,text:d.no});});
+      return el("li",{},el("button",{"aria-current":String(s.id===S.sel),onclick:()=>{S.sel=s.id;render();}},
+        el("span",{class:"nm",text:s.name}),el("span",{class:"dots"},dots),el("span",{class:"sid num",text:s.id})));
+    })));
+  const stu=S.students.find(s=>s.id===S.sel), d=DIM[S.dim];
+  const row=getRow(uid,S.sel,S.dim)||{s:[],note:"",media:""}; const r=dimResult(row,S.dim);
+  const head=el("div",{class:"sheet-h"},
+    el("div",{},el("h2",{text:stu.name}),el("div",{class:"meta num",text:"รหัสนักศึกษา "+stu.id+" · ผู้ประเมิน: "+(S.me.name||"")})),
+    el("div",{class:"seg",role:"group","aria-label":"ด้านการประเมิน"},DIMS.map(x=>{
+      const sub=isSubmitted(S.sel,x.key), rr=dimResult(getRow(uid,S.sel,x.key),x.key);
+      return el("button",{"aria-pressed":String(x.key===S.dim),disabled:!sub,title:sub?"":"นักศึกษายังไม่ส่งผลงานด้านนี้",onclick:()=>{S.dim=x.key;render();}},
+        el("span",{class:"n",text:x.no}),x.title,sub?el("span",{class:"dot "+(rr.done?"done":rr.filled?"part":""),text:rr.done?"✓":rr.filled}):null);})));
+  const card=el("div",{class:"card"});
+  card.append(el("div",{class:"scale-note",text:"ระดับคะแนน: "+d.scale+" · กรณีให้คะแนน 1 ในรายการใด กรุณาเขียนข้อเสนอแนะประกอบ"}));
+  if(d.hasTitle) card.append(el("div",{class:"field"},el("label",{for:"mtitle",text:"ชื่อสื่อ/นวัตกรรม"}),
+    el("input",{id:"mtitle",maxlength:"300",value:row.media||"",placeholder:"เช่น บอร์ดเกมคำศัพท์ภาษาอังกฤษ",oninput:e=>edit(x=>x.media=e.target.value,false)})));
+  let idx=0;
+  d.sections.forEach(sec=>{
+    if(sec.name) card.append(el("div",{class:"sec-title",text:sec.name}));
+    sec.items.forEach((it,j)=>{const i=idx++; const v=row.s[i];
+      const item=el("div",{class:"item"},el("span",{class:"no",text:(j+1)+"."}),el("span",{class:"tx",text:it.t}),
+        el("div",{class:"pick",role:"group","aria-label":"คะแนนข้อ "+(j+1)},[5,4,3,2,1].map(n=>el("button",{"aria-pressed":String(v===n),class:n===1?"lo":null,title:it.d?it.d[5-n]:null,
+          onclick:()=>edit(x=>{x.s[i]=x.s[i]===n?null:n;},true)},n))));
+      if(it.d&&typeof v==="number") item.append(el("div",{class:"desc",text:"ระดับ "+v+": "+it.d[5-v]}));
+      card.append(item);});
+  });
+  card.append(el("div",{class:"field"},el("label",{for:"cm",text:"ข้อเสนอแนะ"}),
+    el("textarea",{id:"cm",maxlength:"4000",placeholder:"จุดเด่น และสิ่งที่ควรพัฒนา",oninput:e=>edit(x=>x.note=e.target.value,false)},row.note||""),
+    r.needsComment?el("span",{class:"hint",text:"มีรายการที่ได้คะแนน 1 กรุณาเขียนข้อเสนอแนะเพื่อการปรับปรุง"}):null));
+  const lv=r.complete?levelOf(S.dim,r.total):null;
+  const bar=el("div",{class:"totalbar"},
+    el("span",{class:"big"},String(r.total),el("small",{text:" / "+d.max})),
+    el("span",{class:"lvl "+(lv?lv.cls:""),text:lv?"ผลการประเมิน: "+lv.name:"ให้คะแนนแล้ว "+r.filled+"/"+d.count+" ข้อ"}),
+    el("span",{class:"save-state"+(S.saveState==="err"?" err":""),id:"saveState",text:saveLabel()}),
+    el("button",{class:"btn ghost sm",onclick:()=>{const nx=nextTask(); if(nx){S.sel=nx[0];S.dim=nx[1];render();window.scrollTo({top:0});} else toast("ประเมินครบทุกรายการแล้ว");}},"รายการถัดไป →"));
+  $("#app").replaceChildren(el("div",{class:"eval"},rail,el("section",{class:"sheet"},head,card,bar)));
+}
+function nextTask(){
+  const order=[]; myStudents().forEach(s=>DIMS.forEach(d=>{if(isSubmitted(s.id,d.key)) order.push([s.id,d.key]);}));
+  const cur=order.findIndex(([s,k])=>s===S.sel&&k===S.dim);
+  for(let k=1;k<=order.length;k++){const t=order[(cur+k)%order.length]; if(!dimResult(getRow(S.user.id,t[0],t[1]),t[1]).done) return t;}
+  return null;
+}
+function saveLabel(){return S.saveState==="saving"?"กำลังบันทึก…":S.saveState==="err"?"บันทึกไม่สำเร็จ แก้ไขอีกครั้งเพื่อลองใหม่":S.saveState==="saved"?"บันทึกแล้ว":"";}
+function edit(fn,rerender){
+  const uid=S.user.id, sid=S.sel, key=S.dim;
+  const cur=getRow(uid,sid,key);
+  const row=cur?{...cur,s:[...(cur.s||[])]}:{evaluator:uid,student_id:sid,domain:key,s:[],media:"",note:""};
+  while(row.s.length<DIM[key].count) row.s.push(null);
+  fn(row); ((S.scores[uid]??={})[sid]??={})[key]=row;
+  S.saveState="saving";
+  if(rerender) render(); else {const n=$("#saveState"); if(n) n.textContent=saveLabel(); clearTimeout(edit._r); edit._r=setTimeout(render,900);}
+  const k=sid+"|"+key; clearTimeout(edit[k]); edit[k]=setTimeout(()=>flush(sid,key), rerender?300:900);
+}
+const inflight={};
+async function flush(sid,key){
+  const k=sid+"|"+key; if(inflight[k]){inflight[k].again=true;return;} inflight[k]={again:false};
+  const row=getRow(S.user.id,sid,key);
+  const {error}=await sb.from("scores").upsert({evaluator:S.user.id,student_id:sid,domain:key,s:row.s,media:row.media||"",note:row.note||"",updated_at:new Date().toISOString()},{onConflict:"evaluator,student_id,domain"});
+  S.saveState=error?"err":"saved"; if(error) toast(errMsg(error));
+  const again=inflight[k].again; delete inflight[k]; if(again) return flush(sid,key);
+  const n=$("#saveState"); if(n){n.textContent=saveLabel(); n.classList.toggle("err",S.saveState==="err");}
+}
+
+/* ---------- summary (admin) ---------- */
+function evaluators(){return S.committee.filter(c=>c.status==="approved").sort((a,b)=>a.seat-b.seat);}
+function aggregate(sid,key){
+  const rows=evaluators().map(c=>{const row=getRow(c.user_id,sid,key); return {c,row,r:dimResult(row,key)};});
+  const fin=rows.filter(x=>x.r.complete); const avg=fin.length?fin.reduce((a,x)=>a+x.r.total,0)/fin.length:null;
+  return {rows,n:fin.length,avg};
+}
+function renderSummary(){
+  const nL=evaluators().length;
+  const stats=el("div",{class:"stats"},DIMS.map(d=>{
+    const subs=S.students.filter(s=>isSubmitted(s.id,d.key)); const need=subs.length*nL; let got=0; const avgs=[];
+    subs.forEach(s=>{const a=aggregate(s.id,d.key); got+=a.n; if(a.avg!=null) avgs.push(a.avg);});
+    return el("div",{class:"stat"},el("span",{class:"k",text:d.no+". "+d.title}),
+      el("span",{class:"v",text:avgs.length?fmt(avgs.reduce((a,b)=>a+b,0)/avgs.length)+" / "+d.max:"–"}),
+      el("span",{class:"k num",text:`ส่งผลงาน ${subs.length} คน · ประเมินแล้ว ${got}/${need}`}),
+      el("div",{class:"bar"},el("i",{style:`width:${need?got/need*100:0}%`})));}));
+  const tb=el("tbody");
+  S.students.forEach((s,i)=>{
+    const tr=el("tr",{},el("td",{class:"num muted",text:i+1}),el("td",{class:"num",text:s.id}),el("td",{text:s.name}));
+    DIMS.forEach(d=>{
+      if(!isSubmitted(s.id,d.key)) return tr.append(el("td",{class:"c muted",text:"ยังไม่ส่ง"}));
+      const a=aggregate(s.id,d.key), lv=a.avg!=null?levelOf(d.key,a.avg):null;
+      tr.append(el("td",{class:"c"},el("button",{class:"cell",onclick:()=>{S.detail=[s.id,d.key];render();}},
+        el("span",{class:"s",text:a.avg!=null?fmt(a.avg):"–"}),lv?el("span",{class:"lvl "+lv.cls,text:lv.name}):null,
+        el("span",{class:"n num",text:`ประเมินแล้ว ${a.n}/${nL}`}))));});
+    tb.append(tr);});
+  const parts=[stats,
+    el("div",{class:"toolbar"},el("h2",{text:"คะแนนเฉลี่ยจากอาจารย์ผู้ประเมิน"}),
+      el("span",{class:"muted",style:"font-size:13px",text:"เลือกคะแนนเพื่อดูรายละเอียดรายผู้ประเมิน"}),
+      el("button",{class:"btn ghost sm",onclick:async()=>{await loadAll();toast("อัปเดตข้อมูลแล้ว");}},"รีเฟรช"),
+      el("button",{class:"btn sm",onclick:exportCsv},"ดาวน์โหลด CSV")),
+    el("div",{class:"tbl-wrap"},el("table",{},el("thead",{},el("tr",{},el("th",{text:"ที่"}),el("th",{text:"รหัส"}),el("th",{text:"ชื่อ-สกุล"}),
+      DIMS.map(d=>el("th",{class:"c",text:`${d.no}. ${d.short} (เต็ม ${d.max})`})))),tb))];
+  if(S.detail){
+    const [sid,key]=S.detail, s=S.students.find(x=>x.id===sid), d=DIM[key], a=aggregate(sid,key);
+    const box=el("div",{class:"card detail"},el("div",{class:"toolbar",style:"margin:0"},el("h3",{text:`${s.name} · ${d.title}`}),el("button",{class:"btn ghost sm",onclick:()=>{S.detail=null;render();}},"ปิด")));
+    a.rows.forEach(x=>box.append(el("div",{class:"row"},el("span",{text:x.c.seat+". "+x.c.name}),
+      el("span",{class:"num",text:x.r.complete?x.r.total+" / "+d.max:x.r.filled?"ไม่ครบ ("+x.r.filled+"/"+d.count+")":"ยังไม่ประเมิน"}),
+      el("span",{class:"cm muted",text:(key==="media"&&x.row&&x.row.media?"สื่อ: "+x.row.media+" — ":"")+((x.row&&x.row.note)||"")}))));
+    parts.push(box);
+  }
+  $("#app").replaceChildren(...parts);
+}
+function exportCsv(){
+  const ev=evaluators(); const head=["ที่","รหัสนักศึกษา","ชื่อ-สกุล"];
+  DIMS.forEach(d=>{ev.forEach(c=>head.push(`${d.short} - ${c.name}`)); head.push(`${d.short} - เฉลี่ย`,`${d.short} - ผล`);});
+  const lines=[head];
+  S.students.forEach((s,i)=>{const row=[i+1,s.id,s.name];
+    DIMS.forEach(d=>{const a=aggregate(s.id,d.key), sub=isSubmitted(s.id,d.key);
+      a.rows.forEach(x=>row.push(sub&&x.r.complete?x.r.total:""));
+      row.push(sub&&a.avg!=null?fmt(a.avg):"", sub?(a.avg!=null?levelOf(d.key,a.avg).name:""):"ยังไม่ส่ง");});
+    lines.push(row);});
+  const csv="﻿"+lines.map(r=>r.map(v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",")).join("\r\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="best-practice-EDU66-492.csv"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ---------- settings (admin) ---------- */
+const STATUS={approved:["อนุมัติแล้ว","ok"],pending:["รออนุมัติ","wait"],rejected:["ไม่อนุมัติ","wait"],left:["ออกจากระบบผู้ประเมิน","wait"]};
+function renderSettings(){
+  const seatsUsed=evaluators().length;
+  const people=[...S.committee].sort((a,b)=>({pending:0,approved:1,rejected:2,left:3}[a.status]-({pending:0,approved:1,rejected:2,left:3}[b.status]))||((a.seat||9)-(b.seat||9)));
+  const lect=el("div",{class:"card panel"},
+    el("h2",{text:`อาจารย์ผู้ประเมิน (${seatsUsed}/5)`}),
+    el("p",{text:"ส่งลิงก์เว็บนี้ให้อาจารย์ เมื่ออาจารย์เข้าสู่ระบบด้วย Google และส่งคำขอ ชื่อจะปรากฏที่นี่ให้อนุมัติ"}),
+    people.length?people.map(c=>{const [lab,cls]=STATUS[c.status]||[c.status,"wait"];
+      return el("div",{class:"lect",style:"grid-template-columns:28px minmax(0,1fr) auto"},
+        el("span",{class:"ix",text:c.seat||"–"}),
+        el("div",{style:"min-width:0"},el("div",{text:c.name}),el("div",{class:"muted",style:"font-size:12.5px;overflow-wrap:anywhere",text:c.email})),
+        el("div",{style:"display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"},el("span",{class:"tag "+cls,text:lab}),
+          c.status!=="approved"?el("button",{class:"btn sm",disabled:seatsUsed>=5,onclick:()=>adminRpc("approve_committee",{p_user:c.user_id},"อนุมัติแล้ว")},"อนุมัติ"):null,
+          c.status!=="rejected"?el("button",{class:"btn ghost sm",onclick:()=>adminRpc("reject_committee",{p_user:c.user_id},c.status==="approved"?"นำออกจากผู้ประเมินแล้ว":"ไม่อนุมัติแล้ว")},c.status==="approved"?"นำออก":"ไม่อนุมัติ"):null));
+    }):el("p",{text:"ยังไม่มีคำขอ"}),
+    el("h2",{text:"เพิ่มผู้ดูแลระบบ",style:"margin-top:8px"}),
+    el("p",{text:"ผู้ที่จะเพิ่มต้องเข้าสู่ระบบด้วย Google อย่างน้อยหนึ่งครั้งก่อน"}),
+    el("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},el("input",{id:"newadmin",type:"email",placeholder:"อีเมล Google",style:"flex:1;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)"}),
+      el("button",{class:"btn sm",onclick:()=>adminRpc("add_admin",{p_email:$("#newadmin").value},"เพิ่มผู้ดูแลระบบแล้ว")},"เพิ่ม")));
+  const tb=el("tbody");
+  S.students.forEach((s,i)=>tb.append(el("tr",{},el("td",{class:"num muted",text:i+1}),el("td",{class:"num",text:s.id}),el("td",{text:s.name}),
+    DIMS.map(d=>el("td",{class:"c"},el("input",{type:"checkbox",class:"chk",id:`c${s.id}${d.key}`,"aria-label":`${s.name} ส่ง${d.title}`,checked:isSubmitted(s.id,d.key),onchange:e=>setSubmitted([s.id],[d.key],e.target.checked)}))),
+    el("td",{class:"c"},el("input",{type:"checkbox",class:"chk",id:`c${s.id}all`,"aria-label":`${s.name} ส่งครบทุกด้าน`,checked:DIMS.every(d=>isSubmitted(s.id,d.key)),onchange:e=>setSubmitted([s.id],DIMS.map(d=>d.key),e.target.checked)})))));
+  const counts=DIMS.map(d=>S.students.filter(s=>isSubmitted(s.id,d.key)).length);
+  const subs=el("div",{class:"card panel"},
+    el("h2",{text:"การส่งผลงาน Best Practice"}),
+    el("p",{text:"ทำเครื่องหมายด้านที่นักศึกษาส่งผลงานแล้ว อาจารย์ผู้ประเมินจะเห็นเฉพาะรายการที่ทำเครื่องหมายไว้"}),
+    el("div",{class:"tbl-wrap"},el("table",{},el("thead",{},
+      el("tr",{},el("th",{text:"ที่"}),el("th",{text:"รหัส"}),el("th",{text:"ชื่อ-สกุล"}),DIMS.map((d,k)=>el("th",{class:"c",title:d.title},`${d.no}. ${d.short}`,el("br"),el("span",{class:"num",text:`${counts[k]} คน`}))),el("th",{class:"c",text:"ทุกด้าน"})),
+      el("tr",{},el("th",{}),el("th",{}),el("th",{text:"เลือก/ยกเลิกทั้งคอลัมน์"}),DIMS.map((d,k)=>el("th",{class:"c"},el("input",{type:"checkbox",class:"chk",id:"col"+d.key,"aria-label":"ทุกคน "+d.title,checked:counts[k]===S.students.length,onchange:e=>setSubmitted(S.students.map(s=>s.id),[d.key],e.target.checked)}))),el("th",{}))),tb)));
+  $("#app").replaceChildren(el("div",{class:"grid2"},lect,subs));
+}
+async function adminRpc(fn,args,ok){const {error}=await sb.rpc(fn,args); if(error) return toast(errMsg(error)); toast(ok); loadAll();}
+async function setSubmitted(ids,keys,val){
+  const rows=[]; ids.forEach(id=>keys.forEach(k=>{(S.submitted[id]??={})[k]=val; rows.push({student_id:id,domain:k,submitted:val,updated_at:new Date().toISOString(),updated_by:S.user.id});}));
+  render();
+  const {error}=await sb.from("submissions").upsert(rows,{onConflict:"student_id,domain"});
+  if(error){toast(errMsg(error)); loadAll();}
+}
+
+sb.auth.onAuthStateChange((ev)=>{ if(ev==="SIGNED_OUT") renderLogin(); });
+start().catch(e=>{console.error(e); $("#app").replaceChildren(el("div",{class:"notice"},el("h2",{text:"เริ่มระบบไม่สำเร็จ"}),el("p",{text:"กรุณาโหลดหน้าใหม่อีกครั้ง"})));});
+</script>
+
+</body>
+</html>
